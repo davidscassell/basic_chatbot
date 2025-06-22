@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Flask React Chat</title>
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+function App() {
+    const [messages, setMessages] = React.useState([]);
+    const [input, setInput] = React.useState('');
+    const sendMessage = async () => {
+        const newMessages = messages.concat({role: 'user', content: input});
+        setMessages(newMessages);
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({messages: newMessages})
+        });
+        const data = await response.json();
+        setMessages(newMessages.concat({role: 'assistant', content: data.reply}));
+        setInput('');
+    };
+    return (
+        <div>
+            <h1>React LangGraph Chat</h1>
+            <div style={{border: '1px solid #ccc', padding: '10px', height: '300px', overflowY: 'scroll'}}>
+                {messages.map((m, i) => <div key={i}><strong>{m.role}:</strong> {m.content}</div>)}
+            </div>
+            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => {if(e.key==='Enter') sendMessage();}} />
+            <button onClick={sendMessage}>Send</button>
+        </div>
+    );
+}
+ReactDOM.render(<App />, document.getElementById('root'));
+</script>
+</body>
+</html>
