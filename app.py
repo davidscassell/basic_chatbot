@@ -49,10 +49,14 @@ def chat():
     thread_id = session["thread_id"]
     def generate():
         config = {"configurable": {"thread_id": thread_id}}
-        for event in graph.stream({"messages": [{"role": "user", "content": user_input}]}, config=config):
-            for value in event.values():
-                content = value["messages"][-1].content
-                yield f"data: {json.dumps({'reply': content})}\n\n"
+        # Use stream_mode="messages" for token-level streaming
+        for message_chunk, metadata in graph.stream(
+            {"messages": [{"role": "user", "content": user_input}]},
+            config=config,
+            stream_mode="messages",
+        ):
+            if hasattr(message_chunk, "content") and message_chunk.content:
+                yield f"data: {json.dumps({'reply': message_chunk.content})}\n\n"
     return Response(generate(), mimetype="text/event-stream")
 
 if __name__ == "__main__":
