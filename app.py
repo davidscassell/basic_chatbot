@@ -7,12 +7,8 @@ from typing import Annotated
 from typing_extensions import TypedDict
 import os
 import json
-from dotenv import load_dotenv
 
 app = Flask(__name__)
-
-# Load environment variables from .env file
-load_dotenv()
 
 # Set your OpenAI API key here or via environment variable
 api_key = os.getenv("OPENAI_API_KEY")
