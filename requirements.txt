@@ -1,0 +1,17 @@
+Flask==3.1.1
+flask-cors==6.0.1
+langchain==0.3.26
+langchain-community==0.3.26
+langchain-core==0.3.66
+langchain-openai==0.3.26
+langchain-text-splitters==0.3.8
+langgraph==0.5.0
+langgraph-checkpoint==2.1.0
+langgraph-prebuilt==0.5.0
+langgraph-sdk==0.1.70
+langgraph-supervisor==0.0.27
+langsmith==0.4.2
+openai==1.91.0
+typing-inspect==0.9.0
+typing-inspection==0.4.1
+typing_extensions==4.14.0
