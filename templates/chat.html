@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Chatbot Demo</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Optional: your own stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='chat.css') }}">
+
+  <style>
+    .chat-box   {max-width:650px; margin:auto; height:85vh; display:flex; flex-direction:column; border:1px solid #dedede; border-radius:.5rem;}
+    .chat-body  {flex:1; overflow-y:auto; padding:1rem; background:#fafafa;}
+    .msg        {margin-bottom:.6rem; line-height:1.35;}
+    .msg.user   {text-align:right;}
+    .msg.bot    {text-align:left;  color:#0d6efd;}
+  </style>
+</head>
+<body>
+
+<div class="chat-box mt-4 shadow-sm">
+  <div id="chat-body" class="chat-body"></div>
+
+  <!-- input area -->
+  <form id="chat-form" class="d-flex border-top p-2">
+    <input id="chat-input" class="form-control me-2" type="text" autocomplete="off" placeholder="Type a message…">
+    <button class="btn btn-primary" type="submit">Send</button>
+  </form>
+</div>
+
+<!-- jQuery + Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  const $body  = $('#chat-body');
+  const $input = $('#chat-input');
+
+  $('#chat-form').on('submit', function(e) {
+    e.preventDefault();
+    const text = $input.val().trim();
+    if (!text) return;
+    append('user', text);
+    $input.val('').focus();
+    streamBotReply(text);
+  });
+
+  function append(sender, text){
+    const div = $('<div/>').addClass('msg '+sender).text(text);
+    $body.append(div);
+    $body.scrollTop($body[0].scrollHeight);
+    return div;
+  }
+
+  function streamBotReply(userText) {
+    let botDiv = append('bot', '');
+    let fullReply = '';
+    const evtSource = new EventSourcePolyfill('/chat', {
+      headers: { 'Content-Type': 'application/json' },
+      payload: JSON.stringify({ message: userText })
+    });
+    evtSource.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      fullReply = data.reply;
+      botDiv.text(fullReply);
+      $body.scrollTop($body[0].scrollHeight);
+    };
+    evtSource.onerror = function() {
+      evtSource.close();
+    };
+  }
+
+  // Polyfill for POST with SSE (EventSource doesn't support POST natively)
+  class EventSourcePolyfill {
+    constructor(url, options) {
+      this.url = url;
+      this.options = options;
+      this.onmessage = null;
+      this.onerror = null;
+      this.controller = new AbortController();
+      this.start();
+    }
+    async start() {
+      try {
+        const response = await fetch(this.url, {
+          method: 'POST',
+          headers: this.options.headers,
+          body: this.options.payload,
+          signal: this.controller.signal
+        });
+        const reader = response.body.getReader();
+        let buffer = '';
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += new TextDecoder().decode(value);
+          let parts = buffer.split('\n\n');
+          buffer = parts.pop();
+          for (const part of parts) {
+            if (part.startsWith('data: ')) {
+              const data = part.slice(6);
+              if (this.onmessage) this.onmessage({ data });
+            }
+          }
+        }
+      } catch (err) {
+        if (this.onerror) this.onerror(err);
+      }
+    }
+    close() {
+      this.controller.abort();
+    }
+  }
+</script>
+</body>
+</html>
