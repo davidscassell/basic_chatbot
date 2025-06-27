@@ -35,7 +35,7 @@ graph = graph_builder.compile(checkpointer=memory)
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("chat.html")
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -45,8 +45,7 @@ def chat():
         for event in graph.stream({"messages": [{"role": "user", "content": user_input}]}, config=config):
             for value in event.values():
                 content = value["messages"][-1].content
-                # SSE format: data: ...\n\n
-                yield f"data: {json.dumps({'content': content})}\n\n"
+                yield f"data: {json.dumps({'reply': content})}\n\n"
     return Response(generate(), mimetype="text/event-stream")
 
 if __name__ == "__main__":
