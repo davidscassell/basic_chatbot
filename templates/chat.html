@@ -11,44 +11,79 @@
   <!-- Optional: your own stylesheet -->
   <link rel="stylesheet" href="{{ url_for('static', filename='chat.css') }}">
 
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.2/css/all.css" />
+  <!-- Google Fonts Roboto -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" />
+
   <style>
-    .chat-box   {max-width:650px; margin:auto; height:85vh; display:flex; flex-direction:column; border:1px solid #dedede; border-radius:.5rem;}
-    .chat-body  {flex:1; overflow-y:auto; padding:1rem; background:#fafafa;}
-    .msg        {margin-bottom:.6rem; line-height:1.35;}
-    .msg.user   {text-align:right;}
-    .msg.bot    {text-align:left;  color:#0d6efd;}
+    .gradient-custom {
+      background: #2563eb;
+      background: linear-gradient(to bottom right, #2563eb 0%, #3b82f6 100%);
+      min-height: 100vh;
+    }
+    .mask-custom {
+      background: rgba(24, 24, 16, .2);
+      border-radius: 2em;
+      backdrop-filter: blur(15px);
+      border: 2px solid rgba(255, 255, 255, 0.05);
+      background-clip: padding-box;
+      box-shadow: 10px 10px 10px rgba(46, 54, 68, 0.03);
+    }
+    .chat-message {
+      color: #fff;
+      background: rgba(24, 24, 16, .2);
+      border-radius: 1em;
+      padding: 1em;
+      margin-bottom: 1em;
+      word-break: break-word;
+    }
+    .chat-message.user {
+      background: #fff;
+      color: #2563eb;
+      text-align: right;
+    }
+    .chat-message.bot {
+      background: rgba(24, 24, 16, .2);
+      color: #fff;
+      text-align: left;
+    }
+    .chat-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 1em;
+    }
     @media (max-width: 700px) {
-      .chat-box {
-        max-width: 100vw;
-        height: 100vh;
-        border-radius: 0;
-        border: none;
-        margin: 0;
+      .container, .row, .col-md-6, .col-lg-7, .col-xl-7, .col-md-6, .col-lg-5, .col-xl-5 {
+        padding: 0 !important;
+        margin: 0 !important;
       }
-      .chat-body {
-        padding: 0.5rem;
-      }
-      #chat-input {
-        font-size: 1em;
-        padding: 0.7em 0.8em;
-      }
-      #chat-form {
-        padding: 0.5em;
+      .mask-custom {
+        border-radius: 0.5em;
       }
     }
   </style>
 </head>
 <body>
-
-<div class="chat-box mt-4 shadow-sm">
-  <div id="chat-body" class="chat-body"></div>
-
-  <!-- input area -->
-  <form id="chat-form" class="d-flex border-top p-2">
-    <input id="chat-input" class="form-control me-2" type="text" autocomplete="off" placeholder="Type a message…">
-    <button class="btn btn-primary" type="submit">Send</button>
-  </form>
-</div>
+<section class="gradient-custom">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card mask-custom">
+          <div class="card-body p-4">
+            <div id="chat-body" class="chat-body"></div>
+            <form id="chat-form" class="d-flex mt-3">
+              <textarea id="chat-input" class="form-control me-2" rows="2" placeholder="Type a message…"></textarea>
+              <button class="btn btn-light btn-lg btn-rounded" type="submit">Send</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- jQuery + Bootstrap JS -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -69,7 +104,7 @@
   });
 
   function append(sender, text){
-    const div = $('<div/>').addClass('msg '+sender);
+    const div = $('<div/>').addClass('chat-message ' + sender);
     if(sender === 'bot') {
       div.html(marked.parse(text));
     } else {
@@ -81,7 +116,7 @@
   }
 
   function streamBotReply(userText) {
-    let botDiv = $('<div/>').addClass('msg bot');
+    let botDiv = $('<div/>').addClass('chat-message bot');
     $body.append(botDiv);
     $body.scrollTop($body[0].scrollHeight);
     let fullReply = '';
