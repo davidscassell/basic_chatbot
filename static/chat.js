@@ -5,19 +5,19 @@ const tabChat = document.getElementById('tab-chat');
 
 function appendMessage(sender, text) {
     const row = document.createElement('div');
-    row.className = `message-row ${sender}`;
-    let avatar, content;
+    row.className = `chat-message ${sender}`;
+    let content;
     if (sender === 'user') {
-        avatar = `<div class="avatar user-avatar">You</div>`;
-        content = `<div class="message-content">${text}</div>`;
-        row.innerHTML = `${content}${avatar}`;
+        content = `<div>${text}</div>`;
+        row.innerHTML = content;
     } else {
-        avatar = `<div class="avatar">🤖</div>`;
-        content = `<div class="message-content">${text}</div>`;
-        row.innerHTML = `${avatar}${content}`;
+        // Use marked for markdown rendering
+        content = `<div>${marked.parse(text)}</div>`;
+        row.innerHTML = content;
     }
     chatbox.appendChild(row);
     chatbox.scrollTop = chatbox.scrollHeight;
+    return row;
 }
 
 form.addEventListener('submit', function(e) {
@@ -30,17 +30,17 @@ form.addEventListener('submit', function(e) {
 });
 
 function streamChat(message) {
+    let botDiv = appendMessage('bot', '');
+    let fullReply = '';
+    const botContentDiv = botDiv;
     const evtSource = new EventSourcePolyfill('/chat', {
         headers: { 'Content-Type': 'application/json' },
         payload: JSON.stringify({ message })
     });
-    let botMsg = '';
-    appendMessage('bot', '');
-    const botDiv = chatbox.lastChild.querySelector('.message-content');
     evtSource.onmessage = function(event) {
         const data = JSON.parse(event.data);
-        botMsg = data.content;
-        botDiv.textContent = botMsg;
+        fullReply += data.reply;
+        botContentDiv.innerHTML = marked.parse(fullReply);
         chatbox.scrollTop = chatbox.scrollHeight;
     };
     evtSource.onerror = function() {
